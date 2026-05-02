@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Rate Your Order - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="customer-dashboard.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <a href="order-tracking.html" class="nav-link">← My Orders</a>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <div class="auth-wrapper">
+    <div class="card auth-card" style="max-width:520px;">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div style="font-size:3.5rem;margin-bottom:1rem;">⭐</div>
+          <h2>Rate Your Experience</h2>
+          <p class="text-muted mt-1">Order: <strong id="show-order"></strong></p>
+        </div>
+
+        <form id="rating-form">
+          <div class="mb-3">
+            <label class="form-label text-center w-full">Rate the Delivery Agent</label>
+            <div class="stars-row">
+              <input type="radio" id="as5" name="agent-score" value="5" required><label for="as5">★</label>
+              <input type="radio" id="as4" name="agent-score" value="4"><label for="as4">★</label>
+              <input type="radio" id="as3" name="agent-score" value="3"><label for="as3">★</label>
+              <input type="radio" id="as2" name="agent-score" value="2"><label for="as2">★</label>
+              <input type="radio" id="as1" name="agent-score" value="1"><label for="as1">★</label>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label text-center w-full">Rate the Overall Order</label>
+            <div class="stars-row">
+              <input type="radio" id="os5" name="order-score" value="5" required><label for="os5">★</label>
+              <input type="radio" id="os4" name="order-score" value="4"><label for="os4">★</label>
+              <input type="radio" id="os3" name="order-score" value="3"><label for="os3">★</label>
+              <input type="radio" id="os2" name="order-score" value="2"><label for="os2">★</label>
+              <input type="radio" id="os1" name="order-score" value="1"><label for="os1">★</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Your Feedback (Optional)</label>
+            <textarea id="feedback" class="form-control" placeholder="Tell us about your delivery experience..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full">Submit Rating</button>
+          <a href="order-tracking.html" class="btn btn-outline w-full mt-2">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const user = checkAuth(['customer']);
+    const orderId = new URLSearchParams(window.location.search).get('orderId');
+    if (!orderId) window.location.href = 'order-tracking.html';
+    document.getElementById('show-order').textContent = orderId;
+
+    document.getElementById('rating-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const agentScore = document.querySelector('input[name="agent-score"]:checked')?.value;
+      const orderScore = document.querySelector('input[name="order-score"]:checked')?.value;
+      if (!agentScore || !orderScore) { notify('Please select ratings for both!', 'error'); return; }
+
+      const orders = getDB('fg_orders');
+      const oi = orders.findIndex(o => o.id === orderId);
+      if (oi === -1) { notify('Order not found', 'error'); return; }
+      if (orders[oi].ratingId) { notify('You have already rated this order', 'warning'); return; }
+
+      const ratings = getDB('fg_ratings');
+      const newRating = {
+        id: generateId('RTG-'),
+        orderId, customerId: user.id, agentId: orders[oi].agentId,
+        agentScore: parseInt(agentScore), orderScore: parseInt(orderScore),
+        comment: document.getElementById('feedback').value,
+        date: new Date().toISOString()
+      };
+      ratings.push(newRating);
+      saveDB('fg_ratings', ratings);
+
+      orders[oi].ratingId = newRating.id;
+      saveDB('fg_orders', orders);
+
+      // Update agent rating average
+      if (orders[oi].agentId) {
+        const users = getDB('fg_users');
+        const ai = users.findIndex(u => u.id === orders[oi].agentId);
+        if (ai > -1) {
+          const agentRatings = ratings.filter(r => r.agentId === orders[oi].agentId);
+          const avg = (agentRatings.reduce((s, r) => s + r.agentScore, 0) / agentRatings.length).toFixed(1);
+          users[ai].rating = parseFloat(avg);
+          saveDB('fg_users', users);
+        }
+      }
+
+      addNotification(user.id, `✅ Your rating for order ${orderId} was submitted. Thank you!`, 'success');
+      notify('Rating submitted! Thank you.', 'success');
+      setTimeout(() => window.location.href = 'order-tracking.html', 1500);
+    });
+  </script>
+</body>
+</html>

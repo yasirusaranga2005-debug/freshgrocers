@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Checkout - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="index.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <div class="notif-wrapper">
+        <button id="notif-btn">🔔<span id="notif-badge"></span></button>
+        <div id="notif-panel"><div class="notif-panel-header"><span>Notifications</span></div><div id="notif-list"></div></div>
+      </div>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <div class="container py-4" style="max-width:700px;">
+    <div class="flex gap-3" style="flex-wrap:wrap;align-items:flex-start;">
+      <div class="card" style="flex:1;min-width:300px;">
+        <div class="card-header">Delivery Details</div>
+        <div class="card-body">
+          <div id="csr-notice" class="hidden" style="background:#fef3c7;border:1px solid #fde68a;border-radius:var(--radius-md);padding:1rem;margin-bottom:1.25rem;">
+            <strong>⚠️ CSR Mode:</strong> You are creating this order on behalf of a customer. Enter the customer's details below.
+          </div>
+          <form id="checkout-form">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">First Name</label><input id="chk-firstname" class="form-control" required></div>
+              <div class="form-group"><label class="form-label">Last Name</label><input id="chk-lastname" class="form-control" required></div>
+            </div>
+            <div class="form-group"><label class="form-label">Phone Number</label><input id="chk-phone" type="tel" class="form-control" placeholder="07XXXXXXXX" required></div>
+            <div class="form-group"><label class="form-label">Delivery Address</label><input id="chk-address" class="form-control" placeholder="Full street address"></div>
+            <div class="form-group"><label class="form-label">City / Area</label><input id="chk-location" class="form-control" placeholder="e.g. Colombo 03" required></div>
+            <button type="submit" class="btn btn-primary w-full" style="margin-top:1rem;">Confirm Order →</button>
+            <a href="cart.html" class="btn btn-outline w-full mt-2">← Back to Cart</a>
+          </form>
+        </div>
+      </div>
+
+      <div class="card" style="width:260px;flex-shrink:0;">
+        <div class="card-header">Order Summary</div>
+        <div class="card-body">
+          <div id="order-items-list"></div>
+          <div class="divider"></div>
+          <div class="flex justify-between"><span class="text-muted">Total</span><span class="font-bold text-primary" style="font-size:1.3rem;" id="chk-total">Rs.0.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const user = checkAuth(['customer','csr']);
+    const isCsr = user && user.role === 'csr';
+    if (isCsr) document.getElementById('csr-notice').classList.remove('hidden');
+    else {
+      document.getElementById('chk-firstname').value = user.firstName || '';
+      document.getElementById('chk-lastname').value = user.lastName || '';
+      document.getElementById('chk-phone').value = user.phone || '';
+      document.getElementById('chk-address').value = user.address || '';
+      document.getElementById('chk-location').value = user.location || '';
+    }
+
+    const cart = getCart();
+    document.getElementById('chk-total').textContent = `Rs.${getCartTotal().toFixed(2)}`;
+    document.getElementById('order-items-list').innerHTML = cart.map(i=>
+      `<div class="flex justify-between mb-1" style="font-size:0.9rem;"><span>${i.product.name} x${i.qty}</span><span class="font-bold">Rs.${(i.product.price*i.qty).toFixed(2)}</span></div>`).join('');
+
+    document.getElementById('checkout-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const details = {
+        name: document.getElementById('chk-firstname').value + ' ' + document.getElementById('chk-lastname').value,
+        phone: document.getElementById('chk-phone').value,
+        address: document.getElementById('chk-address').value,
+        location: document.getElementById('chk-location').value
+      };
+      const orderId = placeOrder(details, user, isCsr);
+      if (orderId) {
+        sessionStorage.setItem('currentOrderId', orderId);
+        sessionStorage.setItem('deliveryLocation', details.location);
+        setTimeout(() => window.location.href = 'agent-selection.html', 3200);
+      }
+    });
+  </script>
+</body>
+</html>

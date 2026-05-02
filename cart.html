@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Cart - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="customer-dashboard.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <a href="products.html" class="nav-link">← Continue Shopping</a>
+      <div class="notif-wrapper">
+        <button id="notif-btn">🔔<span id="notif-badge"></span></button>
+        <div id="notif-panel"><div class="notif-panel-header"><span>Notifications</span></div><div id="notif-list"></div></div>
+      </div>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <div class="container py-4" style="max-width:860px;">
+    <h2 class="mb-4">Shopping Cart</h2>
+    <div id="cart-container"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    checkAuth(['customer','csr']);
+
+    window.renderCart = function() {
+      const cart = getCart();
+      const el = document.getElementById('cart-container');
+      if (!cart.length) {
+        el.innerHTML = `<div class="card text-center p-3"><div style="font-size:4rem;margin-bottom:1rem">🛒</div><h3>Your cart is empty</h3><p class="text-muted mt-1">Add some items from our store.</p><a href="products.html" class="btn btn-primary mt-3">Browse Products</a></div>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="flex gap-3" style="flex-wrap:wrap;align-items:flex-start;">
+          <div class="card" style="flex:1;min-width:300px;">
+            <div class="card-header">Items (${cart.reduce((a,i)=>a+i.qty,0)})</div>
+            <div class="card-body">
+              ${cart.map(item=>`
+                <div class="cart-item">
+                  <img src="${item.product.image}" class="cart-item-img" onerror="this.src='https://placehold.co/80x80?text=Item'">
+                  <div style="flex:1;min-width:0;">
+                    <div class="font-bold" style="font-size:1rem;">${item.product.name}</div>
+                    <div class="text-primary" style="font-size:0.9rem;">Rs.${item.product.price.toFixed(2)} each</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <button class="btn-icon" style="width:28px;height:28px;font-size:1rem;" onclick="updateCartItemQty('${item.product.id}',${item.qty-1})">−</button>
+                      <span class="font-bold">${item.qty}</span>
+                      <button class="btn-icon" style="width:28px;height:28px;font-size:1rem;" onclick="updateCartItemQty('${item.product.id}',${item.qty+1})">+</button>
+                    </div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div class="font-bold text-primary">Rs.${(item.product.price*item.qty).toFixed(2)}</div>
+                    <button class="btn btn-danger btn-sm mt-1" onclick="removeFromCart('${item.product.id}')">🗑</button>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>
+          <div class="card" style="width:280px;flex-shrink:0;">
+            <div class="card-header">Order Summary</div>
+            <div class="card-body">
+              <div class="flex justify-between mb-2"><span class="text-muted">Subtotal</span><span class="font-bold">Rs.${getCartTotal().toFixed(2)}</span></div>
+              <div class="flex justify-between mb-2"><span class="text-muted">Delivery</span><span class="text-success font-bold">FREE</span></div>
+              <div class="divider"></div>
+              <div class="flex justify-between mb-3"><span class="font-bold" style="font-size:1.1rem;">Total</span><span class="font-bold text-primary" style="font-size:1.4rem;">Rs.${getCartTotal().toFixed(2)}</span></div>
+              <a href="checkout.html" class="btn btn-primary w-full">Checkout →</a>
+            </div>
+          </div>
+        </div>`;
+    };
+
+    renderCart();
+    updateCartCount();
+  </script>
+</body>
+</html>

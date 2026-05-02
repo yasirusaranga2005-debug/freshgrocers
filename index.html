@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Fresh Grocers - Online Grocery Delivery in Sri Lanka</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="index.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <a href="login.html" class="nav-link">Login</a>
+      <a href="register.html" class="btn btn-primary">Sign Up Free</a>
+    </div>
+  </div></nav>
+
+  <header class="hero"><div class="container text-center">
+    <h1>Sri Lanka's <span>Freshest</span> Online Grocery</h1>
+    <p>Farm-fresh produce, lightning-fast delivery, and dedicated customer support — all in one place. Serving Sri Lanka for over 15 years.</p>
+    <div class="flex justify-center gap-2">
+      <a href="register.html" class="btn btn-primary" style="padding:1rem 2.5rem;font-size:1.1rem;">Shop Now →</a>
+      <a href="login.html" class="btn btn-outline" style="padding:1rem 2.5rem;font-size:1.1rem;">Staff Portal</a>
+    </div>
+  </div></header>
+
+  <section class="container py-4">
+    <div class="text-center mb-4"><h2 style="font-size:2rem;">Why Fresh Grocers?</h2><p class="text-muted mt-1">Trusted by thousands of families across Sri Lanka</p></div>
+    <div class="product-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
+      <div class="card text-center" style="border-top:4px solid var(--primary);"><div class="card-body"><div style="font-size:3.5rem;margin-bottom:1rem;">🥬</div><h3 class="mb-2">Farm Fresh</h3><p class="text-muted">Sourced directly from certified local farms. Quality and freshness guaranteed on every order.</p></div></div>
+      <div class="card text-center" style="border-top:4px solid var(--secondary);"><div class="card-body"><div style="font-size:3.5rem;margin-bottom:1rem;">📍</div><h3 class="mb-2">Smart Delivery</h3><p class="text-muted">Our system finds the nearest available agent to you, ensuring the fastest possible delivery time.</p></div></div>
+      <div class="card text-center" style="border-top:4px solid var(--info);"><div class="card-body"><div style="font-size:3.5rem;margin-bottom:1rem;">📱</div><h3 class="mb-2">SMS Updates</h3><p class="text-muted">Receive real-time SMS notifications when your order is confirmed, picked up, and delivered.</p></div></div>
+      <div class="card text-center" style="border-top:4px solid var(--danger);"><div class="card-body"><div style="font-size:3.5rem;margin-bottom:1rem;">⭐</div><h3 class="mb-2">Rate & Review</h3><p class="text-muted">Share your delivery experience and help us maintain the highest standards of service.</p></div></div>
+    </div>
+  </section>
+
+  <footer><div class="container"><h3 style="color:white;margin-bottom:0.5rem;">🛒 Fresh Grocers</h3><p>© 2026 Fresh Grocers Sri Lanka. All rights reserved.</p></div></footer>
+
+  <script src="app.js"></script>
+  <script>
+    // If there's a v3 reset needed, clear old data
+    const user = getCurrentUser(); if(user) redirectByRole(user.role);
+  </script>
+</body>
+</html>

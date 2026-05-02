@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Order Tracking - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="customer-dashboard.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <a href="customer-dashboard.html" class="nav-link">Dashboard</a>
+      <div class="notif-wrapper">
+        <button id="notif-btn">🔔<span id="notif-badge"></span></button>
+        <div id="notif-panel"><div class="notif-panel-header"><span>Notifications</span></div><div id="notif-list"></div></div>
+      </div>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <div class="container py-4">
+    <div class="flex justify-between items-center mb-4">
+      <div><h2>My Orders</h2><p class="text-muted">Track all your orders</p></div>
+    </div>
+    <div id="orders-list"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const user = checkAuth(['customer']);
+
+    function statusIdx(s) { return ['Pending','Assigned','OnTheWay','Delivered'].indexOf(s); }
+
+    function render() {
+      const orders = getDB('fg_orders').filter(o => o.customerId === user.id).reverse();
+      const el = document.getElementById('orders-list');
+      if (!orders.length) { el.innerHTML = '<div class="card p-3 text-center text-muted">No orders yet. <a href="products.html" class="text-primary">Start shopping!</a></div>'; return; }
+
+      el.innerHTML = orders.map(o => {
+        const si = statusIdx(o.status);
+        const steps = ['Pending','Assigned','OnTheWay','Delivered'];
+        const labels = ['Order Placed','Agent Assigned','On The Way','Delivered'];
+        const descs = ['Your order has been placed successfully.','A delivery agent has been assigned.','Your order is out for delivery!','Your order has been delivered. Enjoy!'];
+        
+        let agentHtml = '<span class="text-muted">Pending assignment...</span>';
+        if (o.agentId) {
+          const a = getDB('fg_users').find(u => u.id === o.agentId);
+          if (a) agentHtml = `<span class="font-bold">${a.firstName} ${a.lastName}</span> <span class="info-chip">📞 ${a.phone}</span> <span class="info-chip">★ ${a.rating}</span>`;
+        }
+
+        const canRate = o.status === 'Delivered';
+        const hasRated = !!o.ratingId;
+
+        return `<div class="card mb-3">
+          <div class="card-header">
+            <div><div class="font-bold">${o.id}</div><div class="text-muted" style="font-size:0.85rem;font-weight:400;">${new Date(o.date).toLocaleString()}</div></div>
+            <div class="flex items-center gap-2"><span class="text-primary font-bold">Rs.${o.total.toFixed(2)}</span><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></div>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">🧑‍💼 Delivery Agent: ${agentHtml}</div>
+            <div class="timeline">
+              ${steps.map((s,i)=>`<div class="tl-item ${i < si ? 'done' : i === si ? 'active' : ''}"><div class="tl-title">${labels[i]}</div><div class="tl-desc">${descs[i]}</div></div>`).join('')}
+            </div>
+            ${canRate && !hasRated ? `<div class="text-center mt-2"><a href="rating.html?orderId=${o.id}" class="btn btn-primary">⭐ Rate This Order</a></div>` : ''}
+            ${hasRated ? `<div class="text-center text-success mt-2 font-bold">✅ You rated this order</div>` : ''}
+            <div class="mt-3"><div class="font-bold mb-2">Order Items:</div>${o.items.map(i=>`<div class="flex justify-between text-muted" style="font-size:0.9rem;padding:3px 0;"><span>${i.product.name} × ${i.qty}</span><span>Rs.${(i.product.price*i.qty).toFixed(2)}</span></div>`).join('')}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Customer Support - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="csr-dashboard.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <div class="notif-wrapper">
+        <button id="notif-btn">🔔<span id="notif-badge"></span></button>
+        <div id="notif-panel"><div class="notif-panel-header"><span>Notifications</span></div><div id="notif-list"></div></div>
+      </div>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <div class="dashboard-layout container">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="user-avatar">S</div>
+          <div class="font-bold" id="user-name-display">CSR</div>
+          <div class="text-muted" style="font-size:0.8rem;" id="csr-email-disp"></div>
+          <div class="mt-1"><span class="badge badge-csr">Customer Support</span></div>
+        </div>
+        <div class="sidebar-menu">
+          <a href="#" class="sidebar-link active" onclick="showTab('orders',this)">📋 All Orders</a>
+          <a href="#" class="sidebar-link" onclick="showTab('new-order',this)">➕ New Manual Order</a>
+          <a href="#" class="sidebar-link" onclick="showTab('agents',this)">🛵 Manage Agents</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-content">
+      <!-- All Orders Tab -->
+      <div id="tab-orders">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>All Orders</h2><p class="text-muted">Monitor and assist with all customer orders</p></div>
+          <input type="text" id="order-search" class="form-control" style="width:240px;" placeholder="🔍 Search order ID or phone...">
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Created By</th><th>Agent</th><th>Status</th><th>Total</th></tr></thead>
+          <tbody id="all-orders-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- New Manual Order Tab -->
+      <div id="tab-new-order" class="hidden">
+        <h2 class="mb-2">Create Manual Order</h2>
+        <p class="text-muted mb-4">Place an order on behalf of a customer who called or walked in. The customer will receive an SMS confirmation.</p>
+        <div class="flex gap-3" style="flex-wrap:wrap;align-items:flex-start;">
+          <div class="card" style="flex:1;min-width:300px;">
+            <div class="card-header">Customer Details</div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">First Name</label><input id="mo-fn" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Last Name</label><input id="mo-ln" class="form-control"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Phone Number <span style="color:var(--danger)">*</span></label><input id="mo-phone" class="form-control" placeholder="SMS confirmation will be sent here"></div>
+              <div class="form-group"><label class="form-label">Address</label><input id="mo-address" class="form-control"></div>
+              <div class="form-group"><label class="form-label">City / Area</label><input id="mo-location" class="form-control" placeholder="e.g. Colombo 05"></div>
+            </div>
+          </div>
+          <div class="card" style="flex:1;min-width:300px;">
+            <div class="card-header">Select Products</div>
+            <div class="card-body" style="max-height:400px;overflow-y:auto;" id="csr-product-list"></div>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-header">Order Summary</div>
+          <div class="card-body">
+            <div id="csr-cart-list" class="mb-3"></div>
+            <div class="flex justify-between items-center">
+              <span class="font-bold">Total: <span id="csr-total" class="text-primary" style="font-size:1.4rem;">Rs.0.00</span></span>
+              <button class="btn btn-primary" onclick="placeCsrOrder()">Place Order & Select Agent →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manage Agents Tab -->
+      <div id="tab-agents" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>Manage Delivery Agents</h2><p class="text-muted">View and update agent availability</p></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Agent ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Location</th><th>Rating</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="agents-body"></tbody>
+        </table></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const csrUser = checkAuth(['csr']);
+    if (csrUser) {
+      document.getElementById('user-avatar').textContent = (csrUser.firstName||'S').charAt(0);
+      document.getElementById('csr-email-disp').textContent = csrUser.email || '';
+    }
+
+    function showTab(name, link) {
+      document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+      document.getElementById('tab-' + name).classList.remove('hidden');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      if (link) link.classList.add('active');
+      if (name === 'new-order') loadCsrProducts();
+      if (name === 'agents') loadAgents();
+    }
+
+    function loadOrders() {
+      const query = (document.getElementById('order-search')?.value || '').toLowerCase();
+      const orders = getDB('fg_orders').reverse().filter(o =>
+        !query || o.id.toLowerCase().includes(query) || o.customerInfo.phone.includes(query)
+      );
+      const tbody = document.getElementById('all-orders-body');
+      if (!orders.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:3rem;">No orders found.</td></tr>'; return; }
+      tbody.innerHTML = orders.map(o => {
+        const agent = o.agentId ? getDB('fg_users').find(u => u.id === o.agentId) : null;
+        return `<tr>
+          <td><strong>${o.id}</strong><div class="text-muted" style="font-size:0.8rem;">${new Date(o.date).toLocaleDateString()}</div></td>
+          <td><div class="font-bold">${o.customerInfo.name}</div><div class="text-muted" style="font-size:0.85rem;">📞 ${o.customerInfo.phone}</div></td>
+          <td>${o.isCsrCreated ? '<span class="badge badge-csr">CSR Manual</span>' : '<span class="badge" style="background:#f1f5f9;color:#64748b;">Web</span>'}</td>
+          <td>${agent ? agent.firstName + ' ' + agent.lastName : '<span class="text-muted">-</span>'}</td>
+          <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+          <td class="text-primary font-bold">Rs.${o.total.toFixed(2)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('order-search')?.addEventListener('input', loadOrders);
+
+    // CSR Cart
+    let csrCart = [];
+    function loadCsrProducts() {
+      const products = getDB('fg_products');
+      document.getElementById('csr-product-list').innerHTML = products.map(p => `
+        <div class="flex justify-between items-center mb-2 pb-2" style="border-bottom:1px solid var(--border-light);">
+          <div>
+            <div class="font-bold" style="font-size:0.95rem;">${p.name}</div>
+            <div class="text-primary" style="font-size:0.9rem;">Rs.${p.price.toFixed(2)}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="csrAddProduct('${p.id}')">+ Add</button>
+        </div>`).join('');
+      renderCsrCart();
+    }
+
+    function csrAddProduct(productId) {
+      const p = getDB('fg_products').find(x => x.id === productId);
+      if (!p) return;
+      const ex = csrCart.find(i => i.product.id === productId);
+      if (ex) ex.qty++; else csrCart.push({ product: p, qty: 1 });
+      renderCsrCart();
+    }
+
+    function renderCsrCart() {
+      const total = csrCart.reduce((t, i) => t + i.product.price * i.qty, 0);
+      document.getElementById('csr-cart-list').innerHTML = csrCart.length
+        ? csrCart.map(i => `<div class="flex justify-between mb-1"><span>${i.product.name} × ${i.qty}</span><span class="text-primary">Rs.${(i.product.price*i.qty).toFixed(2)} <button class="btn btn-danger btn-sm" style="padding:1px 6px;" onclick="csrRemoveItem('${i.product.id}')">✕</button></span></div>`).join('')
+        : '<div class="text-muted">No items added yet.</div>';
+      document.getElementById('csr-total').textContent = `Rs.${total.toFixed(2)}`;
+    }
+
+    function csrRemoveItem(id) { csrCart = csrCart.filter(i => i.product.id !== id); renderCsrCart(); }
+
+    function placeCsrOrder() {
+      if (!csrCart.length) { notify('Add at least one product', 'error'); return; }
+      const phone = document.getElementById('mo-phone').value.trim();
+      if (!phone) { notify('Customer phone number is required!', 'error'); return; }
+      const details = {
+        name: `${document.getElementById('mo-fn').value} ${document.getElementById('mo-ln').value}`.trim() || 'Walk-in Customer',
+        phone, address: document.getElementById('mo-address').value, location: document.getElementById('mo-location').value || 'Unknown'
+      };
+      // Temporarily override cart in localStorage
+      saveDB('fg_cart', csrCart);
+      const orderId = placeOrder(details, csrUser, true);
+      if (orderId) {
+        csrCart = []; renderCsrCart();
+        sessionStorage.setItem('currentOrderId', orderId);
+        sessionStorage.setItem('deliveryLocation', details.location);
+        setTimeout(() => window.location.href = 'agent-selection.html', 3200);
+      }
+    }
+
+    function loadAgents() {
+      const agents = getDB('fg_users').filter(u => u.role === 'agent');
+      const tbody = document.getElementById('agents-body');
+      if (!agents.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:3rem;">No agents registered.</td></tr>'; return; }
+      tbody.innerHTML = agents.map(a => `<tr>
+        <td><span class="info-chip">${a.id}</span></td>
+        <td><div class="font-bold">${a.firstName} ${a.lastName}</div></td>
+        <td>${a.email||'-'}</td>
+        <td>${a.phone||'-'}</td>
+        <td>${a.location||'-'}</td>
+        <td class="text-primary">★ ${a.rating||'N/A'}</td>
+        <td><span class="badge ${a.availability ? 'badge-online' : 'badge-offline'}">${a.availability ? '🟢 Online' : '⚫ Offline'}</span></td>
+        <td><button class="btn btn-sm btn-outline" onclick="toggleAgent('${a.id}')">Toggle Status</button></td>
+      </tr>`).join('');
+    }
+
+    function toggleAgent(agentId) {
+      const users = getDB('fg_users');
+      const i = users.findIndex(u => u.id === agentId);
+      if (i > -1) { users[i].availability = !users[i].availability; saveDB('fg_users', users); loadAgents(); notify('Agent status updated', 'success'); }
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Agent Dashboard - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="agent-dashboard.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <div class="notif-wrapper">
+        <button id="notif-btn">🔔<span id="notif-badge"></span></button>
+        <div id="notif-panel"><div class="notif-panel-header"><span>Notifications</span></div><div id="notif-list"></div></div>
+      </div>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <div class="dashboard-layout container">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="user-avatar">A</div>
+          <div class="font-bold" id="user-name-display">Agent</div>
+          <div class="text-muted" style="font-size:0.8rem;" id="agent-id-disp"></div>
+          <div class="mt-2" id="avail-badge-wrap"></div>
+        </div>
+        <div class="sidebar-menu">
+          <a href="#deliveries" class="sidebar-link active" onclick="showTab('deliveries',this)">📦 My Deliveries</a>
+          <a href="#profile" class="sidebar-link" onclick="showTab('profile',this)">👤 My Profile</a>
+          <a href="#location" class="sidebar-link" onclick="showTab('location',this)">📍 Update Location</a>
+        </div>
+      </div>
+    </aside>
+    <main class="dashboard-content">
+      <!-- Deliveries Tab -->
+      <div id="tab-deliveries">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>My Deliveries</h2><p class="text-muted">Manage assigned orders</p></div>
+          <div id="toggle-avail-btn"></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Address</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="agent-orders-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- Profile Tab -->
+      <div id="tab-profile" class="hidden">
+        <h2 class="mb-4">My Profile</h2>
+        <div class="card" style="max-width:560px;">
+          <div class="card-body">
+            <form id="profile-form">
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">First Name</label><input id="pf-firstname" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">Last Name</label><input id="pf-lastname" class="form-control" required></div>
+              </div>
+              <div class="form-group"><label class="form-label">Email</label><input id="pf-email" type="email" class="form-control"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input id="pf-phone" class="form-control"></div>
+              <div class="form-group"><label class="form-label">Current Area / Location</label><input id="pf-location" class="form-control"></div>
+              <div style="background:var(--bg-main);padding:1rem;border-radius:var(--radius-md);margin-bottom:1.5rem;font-size:0.9rem;">
+                <div>Agent ID: <strong id="pf-id"></strong></div>
+                <div class="mt-1">Avg Rating: <strong id="pf-rating" class="text-primary"></strong> ⭐</div>
+              </div>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Tab -->
+      <div id="tab-location" class="hidden">
+        <h2 class="mb-2">Update My Location</h2>
+        <p class="text-muted mb-4">Click anywhere on the map to set your current position.</p>
+        <div class="card">
+          <div class="card-body">
+            <div id="map" style="height:350px;"></div>
+            <div class="flex gap-2 items-center mt-3">
+              <span id="selected-loc-text" class="info-chip flex-1">No location selected</span>
+              <button id="save-location-btn" class="btn btn-primary" disabled>Save Location</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let currentUser = checkAuth(['agent']);
+    let map, marker, selectedLat, selectedLng;
+
+    function showTab(name, link) {
+      document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+      document.getElementById('tab-' + name).classList.remove('hidden');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      if (link) link.classList.add('active');
+      if (name === 'location') initMap();
+    }
+
+    function loadDashboard() {
+      if (!currentUser) return;
+      document.getElementById('user-avatar').textContent = (currentUser.firstName||'A').charAt(0);
+      document.getElementById('agent-id-disp').textContent = currentUser.id;
+      updateAvailBadge();
+      loadOrders();
+      loadProfile();
+    }
+
+    function updateAvailBadge() {
+      currentUser = getDB('fg_users').find(u => u.id === currentUser.id) || currentUser;
+      const avail = currentUser.availability;
+      document.getElementById('avail-badge-wrap').innerHTML = `<span class="badge ${avail ? 'badge-online' : 'badge-offline'}">${avail ? '🟢 Online' : '⚫ Offline'}</span>`;
+      document.getElementById('toggle-avail-btn').innerHTML = `<button class="btn ${avail ? 'btn-warning' : 'btn-primary'}" onclick="toggleAvailability()">${avail ? 'Go Offline' : 'Go Online'}</button>`;
+    }
+
+    function toggleAvailability() {
+      const users = getDB('fg_users');
+      const idx = users.findIndex(u => u.id === currentUser.id);
+      if (idx > -1) {
+        users[idx].availability = !users[idx].availability;
+        saveDB('fg_users', users);
+        currentUser = users[idx];
+        localStorage.setItem('fg_currentUser', JSON.stringify(currentUser));
+        updateAvailBadge();
+        notify(`Status changed to ${currentUser.availability ? 'Online' : 'Offline'}`, 'success');
+      }
+    }
+
+    function loadOrders() {
+      const orders = getDB('fg_orders').filter(o => o.agentId === currentUser.id).reverse();
+      const tbody = document.getElementById('agent-orders-body');
+      if (!orders.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:3rem;">No deliveries assigned yet.</td></tr>'; return; }
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td><strong>${o.id}</strong><div class="text-muted" style="font-size:0.8rem;">${new Date(o.date).toLocaleDateString()}</div></td>
+          <td><div class="font-bold">${o.customerInfo.name}</div><div class="text-muted" style="font-size:0.85rem;">📞 ${o.customerInfo.phone}</div></td>
+          <td>${o.customerInfo.address||''}<div class="text-muted" style="font-size:0.85rem;">${o.customerInfo.location}</div></td>
+          <td class="text-primary font-bold">Rs.${o.total.toFixed(2)}</td>
+          <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+          <td>
+            ${o.status==='Assigned' ? `<button class="btn btn-info btn-sm" onclick="updateStatus('${o.id}','OnTheWay')">Pick Up 🛵</button>` : ''}
+            ${o.status==='OnTheWay' ? `<button class="btn btn-primary btn-sm" onclick="updateStatus('${o.id}','Delivered')">Mark Delivered ✅</button>` : ''}
+            ${o.status==='Delivered' ? `<span class="text-success font-bold">Completed</span>` : ''}
+          </td>
+        </tr>`).join('');
+    }
+
+    function updateStatus(orderId, newStatus) {
+      const orders = getDB('fg_orders');
+      const i = orders.findIndex(o => o.id === orderId);
+      if (i > -1) {
+        orders[i].status = newStatus; saveDB('fg_orders', orders); loadOrders();
+        const msg = newStatus === 'OnTheWay' ? 'is out for delivery!' : 'has been delivered! Please rate your experience.';
+        notify(`Order ${orderId} updated to ${newStatus}`, 'success');
+        addNotification(orders[i].customerId, `📦 Your order ${orderId} ${msg}`, 'info');
+        setTimeout(() => notify(`[📱 SMS → ${orders[i].customerInfo.phone}] Your order ${orderId} ${msg}`, 'info'), 1500);
+      }
+    }
+
+    function loadProfile() {
+      document.getElementById('pf-firstname').value = currentUser.firstName || '';
+      document.getElementById('pf-lastname').value = currentUser.lastName || '';
+      document.getElementById('pf-email').value = currentUser.email || '';
+      document.getElementById('pf-phone').value = currentUser.phone || '';
+      document.getElementById('pf-location').value = currentUser.location || '';
+      document.getElementById('pf-id').textContent = currentUser.id;
+      document.getElementById('pf-rating').textContent = currentUser.rating || '5.0';
+      document.getElementById('user-name-display').textContent = `${currentUser.firstName||''} ${currentUser.lastName||''}`;
+    }
+
+    document.getElementById('profile-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const users = getDB('fg_users');
+      const idx = users.findIndex(u => u.id === currentUser.id);
+      if (idx > -1) {
+        users[idx].firstName = document.getElementById('pf-firstname').value;
+        users[idx].lastName = document.getElementById('pf-lastname').value;
+        users[idx].email = document.getElementById('pf-email').value;
+        users[idx].phone = document.getElementById('pf-phone').value;
+        users[idx].location = document.getElementById('pf-location').value;
+        saveDB('fg_users', users);
+        currentUser = users[idx];
+        localStorage.setItem('fg_currentUser', JSON.stringify(currentUser));
+        loadProfile();
+        notify('Profile updated successfully!', 'success');
+      }
+    });
+
+    function initMap() {
+      if (map) return;
+      const lat = currentUser.lat || 6.9022;
+      const lng = currentUser.lng || 79.8586;
+      map = L.map('map').setView([lat, lng], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+      marker = L.marker([lat, lng], { draggable: true }).addTo(map).bindPopup('Your current location').openPopup();
+      document.getElementById('selected-loc-text').textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+      selectedLat = lat; selectedLng = lng;
+
+      map.on('click', e => {
+        selectedLat = e.latlng.lat; selectedLng = e.latlng.lng;
+        marker.setLatLng(e.latlng);
+        document.getElementById('selected-loc-text').textContent = `Lat: ${selectedLat.toFixed(4)}, Lng: ${selectedLng.toFixed(4)}`;
+        document.getElementById('save-location-btn').disabled = false;
+      });
+    }
+
+    document.getElementById('save-location-btn').addEventListener('click', () => {
+      const users = getDB('fg_users');
+      const idx = users.findIndex(u => u.id === currentUser.id);
+      if (idx > -1) {
+        users[idx].lat = selectedLat; users[idx].lng = selectedLng;
+        users[idx].location = `Lat ${selectedLat.toFixed(3)}, Lng ${selectedLng.toFixed(3)}`;
+        saveDB('fg_users', users);
+        currentUser = users[idx];
+        localStorage.setItem('fg_currentUser', JSON.stringify(currentUser));
+        notify('Location updated on the map!', 'success');
+        document.getElementById('pf-location').value = currentUser.location;
+      }
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>

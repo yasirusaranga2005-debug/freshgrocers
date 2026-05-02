@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Admin Dashboard - Fresh Grocers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container">
+    <a href="admin-dashboard.html" class="navbar-brand">🛒 Fresh Grocers</a>
+    <div class="navbar-nav">
+      <div class="notif-wrapper">
+        <button id="notif-btn">🔔<span id="notif-badge"></span></button>
+        <div id="notif-panel"><div class="notif-panel-header"><span>Notifications</span></div><div id="notif-list"></div></div>
+      </div>
+      <button id="logout-btn" class="btn-icon">🚪</button>
+    </div>
+  </div></nav>
+
+  <!-- Product Modal -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal-box">
+      <div class="modal-header"><span id="prod-modal-title">Add Product</span><button class="modal-close" onclick="closeProdModal()">✕</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="prod-edit-id">
+        <div class="form-group"><label class="form-label">Product Name</label><input id="prod-name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea id="prod-desc" class="form-control"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Price (Rs.)</label><input id="prod-price" type="number" class="form-control" min="0" required></div>
+          <div class="form-group"><label class="form-label">Stock Qty</label><input id="prod-stock" type="number" class="form-control" min="0" required></div>
+        </div>
+        <div class="form-group"><label class="form-label">Category</label><select id="prod-cat" class="form-control"></select></div>
+        <div class="form-group"><label class="form-label">Image URL</label><input id="prod-img" class="form-control" placeholder="https://..."></div>
+        <img id="prod-img-preview" src="" alt="" style="max-height:120px;border-radius:var(--radius-md);margin-top:0.5rem;display:none;">
+        <div class="form-hint">Paste a real image URL from Unsplash or any source. <a href="https://unsplash.com" target="_blank" class="text-primary">Browse Unsplash</a></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeProdModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSR Add Modal -->
+  <div class="modal-overlay" id="csr-modal">
+    <div class="modal-box">
+      <div class="modal-header"><span>Add Customer Support Rep</span><button class="modal-close" onclick="document.getElementById('csr-modal').classList.remove('open')">✕</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First Name</label><input id="csr-fn" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input id="csr-ln" class="form-control"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Email</label><input id="csr-email" type="email" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input id="csr-phone" class="form-control"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Username</label><input id="csr-uname" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Password</label><input id="csr-pass" type="password" class="form-control"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('csr-modal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" onclick="addCsr()">Add CSR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="cat-modal">
+    <div class="modal-box" style="max-width:400px;">
+      <div class="modal-header"><span>Add Category</span><button class="modal-close" onclick="document.getElementById('cat-modal').classList.remove('open')">✕</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Category Name</label><input id="cat-name-inp" class="form-control"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="document.getElementById('cat-modal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-primary" onclick="addCategory()">Add Category</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout container">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="user-avatar">A</div>
+          <div class="font-bold" id="user-name-display">Admin</div>
+          <div class="text-muted" style="font-size:0.8rem;" id="admin-id-disp"></div>
+          <div class="text-muted" style="font-size:0.8rem;" id="admin-email-disp"></div>
+          <div class="mt-1"><span class="badge badge-admin">Administrator</span></div>
+        </div>
+        <div class="sidebar-menu">
+          <a href="#" class="sidebar-link active" onclick="showTab('overview',this)">📊 Overview</a>
+          <a href="#" class="sidebar-link" onclick="showTab('products',this)">🥬 Products</a>
+          <a href="#" class="sidebar-link" onclick="showTab('categories',this)">📂 Categories</a>
+          <a href="#" class="sidebar-link" onclick="showTab('agents',this)">🛵 Agents</a>
+          <a href="#" class="sidebar-link" onclick="showTab('csrs',this)">🎧 CSR Staff</a>
+          <a href="#" class="sidebar-link" onclick="showTab('customers',this)">👥 Customers</a>
+          <a href="#" class="sidebar-link" onclick="showTab('orders',this)">📋 Orders</a>
+          <a href="#" class="sidebar-link" onclick="showTab('reports',this)">📈 Reports</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="dashboard-content">
+      <!-- OVERVIEW -->
+      <div id="tab-overview">
+        <h2 class="mb-4">System Overview</h2>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon" style="background:#d1fae5;">📦</div><div><div class="stat-label">Total Orders</div><div class="stat-value" id="s-orders">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;">👥</div><div><div class="stat-label">Customers</div><div class="stat-value" id="s-custs">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;">🛵</div><div><div class="stat-label">Agents</div><div class="stat-value" id="s-agents">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;">💰</div><div><div class="stat-label">Revenue</div><div class="stat-value" id="s-rev" style="font-size:1.5rem;"></div></div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon" style="background:#e0e7ff;">📦</div><div><div class="stat-label">Products</div><div class="stat-value" id="s-prods">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#d1fae5;">✅</div><div><div class="stat-label">Delivered</div><div class="stat-value" id="s-delivered">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;">⏳</div><div><div class="stat-label">Pending</div><div class="stat-value" id="s-pending">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fce7f3;">⭐</div><div><div class="stat-label">Ratings Given</div><div class="stat-value" id="s-ratings">0</div></div></div>
+        </div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div id="tab-products" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>Manage Products</h2></div>
+          <button class="btn btn-primary" onclick="openProdModal()">+ Add Product</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+          <tbody id="products-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div id="tab-categories" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>Manage Categories</h2></div>
+          <button class="btn btn-primary" onclick="document.getElementById('cat-modal').classList.add('open')">+ Add Category</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Category ID</th><th>Name</th><th>Products</th><th>Actions</th></tr></thead>
+          <tbody id="categories-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- AGENTS -->
+      <div id="tab-agents" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>Delivery Agents</h2><p class="text-muted">Manage registered delivery agents</p></div>
+          <button class="btn btn-primary" onclick="copyAgentLink()">🔗 Generate Agent Registration Link</button>
+        </div>
+        <div id="agent-link-box" class="hidden" style="background:var(--primary-light);padding:1rem;border-radius:var(--radius-md);border:1px solid var(--primary);margin-bottom:1.5rem;">
+          <div class="font-bold mb-1" style="font-size:0.9rem;">📋 Agent Registration Link (share this with new agents):</div>
+          <div class="flex gap-2 items-center">
+            <input type="text" id="agent-link-input" class="form-control" readonly style="font-size:0.85rem;background:white;">
+            <button class="btn btn-primary btn-sm" onclick="doCopyLink()">Copy</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Agent ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Location</th><th>Rating</th><th>Status</th></tr></thead>
+          <tbody id="agents-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- CSRs -->
+      <div id="tab-csrs" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <div><h2>Customer Support Staff</h2></div>
+          <button class="btn btn-primary" onclick="document.getElementById('csr-modal').classList.add('open')">+ Add CSR</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>CSR ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead>
+          <tbody id="csrs-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div id="tab-customers" class="hidden">
+        <div class="flex justify-between items-center mb-4"><div><h2>Registered Customers</h2></div></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Customer ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Location</th><th>Joined</th></tr></thead>
+          <tbody id="customers-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- ORDERS -->
+      <div id="tab-orders" class="hidden">
+        <div class="flex justify-between items-center mb-4"><div><h2>All Orders</h2></div></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Agent</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
+          <tbody id="admin-orders-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="tab-reports" class="hidden">
+        <h2 class="mb-4">System Reports</h2>
+        <div class="flex gap-3" style="flex-wrap:wrap;">
+          <div class="card" style="flex:1;min-width:280px;"><div class="card-header">Revenue Summary</div><div class="card-body" id="report-revenue"></div></div>
+          <div class="card" style="flex:1;min-width:280px;"><div class="card-header">Order Status Breakdown</div><div class="card-body" id="report-status"></div></div>
+          <div class="card" style="flex:1;min-width:280px;"><div class="card-header">Top Agents by Rating</div><div class="card-body" id="report-agents"></div></div>
+          <div class="card" style="flex:1;min-width:280px;"><div class="card-header">Low Stock Products</div><div class="card-body" id="report-stock"></div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const adminUser = checkAuth(['admin']);
+    if (adminUser) {
+      document.getElementById('user-avatar').textContent = (adminUser.firstName||'A').charAt(0);
+      document.getElementById('admin-id-disp').textContent = adminUser.id;
+      document.getElementById('admin-email-disp').textContent = adminUser.email || '';
+    }
+
+    function showTab(name, link) {
+      document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+      document.getElementById('tab-' + name).classList.remove('hidden');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      if (link) link.classList.add('active');
+      const loaders = { overview: loadOverview, products: loadProducts, categories: loadCategories, agents: loadAgents, csrs: loadCsrs, customers: loadCustomers, orders: loadOrders, reports: loadReports };
+      if (loaders[name]) loaders[name]();
+    }
+
+    function loadOverview() {
+      const orders = getDB('fg_orders'), users = getDB('fg_users'), products = getDB('fg_products'), ratings = getDB('fg_ratings');
+      document.getElementById('s-orders').textContent = orders.length;
+      document.getElementById('s-custs').textContent = users.filter(u=>u.role==='customer').length;
+      document.getElementById('s-agents').textContent = users.filter(u=>u.role==='agent').length;
+      document.getElementById('s-rev').textContent = `Rs.${orders.reduce((t,o)=>t+o.total,0).toFixed(0)}`;
+      document.getElementById('s-prods').textContent = products.length;
+      document.getElementById('s-delivered').textContent = orders.filter(o=>o.status==='Delivered').length;
+      document.getElementById('s-pending').textContent = orders.filter(o=>o.status==='Pending').length;
+      document.getElementById('s-ratings').textContent = ratings.length;
+    }
+
+    function loadProducts() {
+      const products = getDB('fg_products');
+      document.getElementById('products-body').innerHTML = products.map(p => `<tr>
+        <td><img src="${p.image}" style="width:54px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.src='https://placehold.co/54x40?text=?'"></td>
+        <td><div class="font-bold">${p.name}</div><div class="text-muted" style="font-size:0.8rem;">${p.description?p.description.substring(0,50)+'...':''}</div></td>
+        <td><span class="badge" style="background:var(--primary-light);color:var(--primary-hover);">${p.category}</span></td>
+        <td class="text-primary font-bold">Rs.${p.price.toFixed(2)}</td>
+        <td><span class="${p.stock<10?'text-danger':'text-success'} font-bold">${p.stock}</span></td>
+        <td class="flex gap-1">
+          <button class="btn btn-sm btn-outline" onclick="editProduct('${p.id}')">✏️ Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">🗑 Del</button>
+        </td>
+      </tr>`).join('');
+    }
+
+    function openProdModal(productId) {
+      document.getElementById('prod-edit-id').value = productId || '';
+      document.getElementById('prod-modal-title').textContent = productId ? 'Edit Product' : 'Add Product';
+      if (productId) {
+        const p = getDB('fg_products').find(x => x.id === productId);
+        if (p) {
+          document.getElementById('prod-name').value = p.name;
+          document.getElementById('prod-desc').value = p.description || '';
+          document.getElementById('prod-price').value = p.price;
+          document.getElementById('prod-stock').value = p.stock;
+          document.getElementById('prod-img').value = p.image || '';
+          if(p.image) { document.getElementById('prod-img-preview').src = p.image; document.getElementById('prod-img-preview').style.display='block'; }
+          document.getElementById('prod-cat').value = p.category;
+        }
+      } else {
+        document.getElementById('prod-name').value = '';
+        document.getElementById('prod-desc').value = '';
+        document.getElementById('prod-price').value = '';
+        document.getElementById('prod-stock').value = '';
+        document.getElementById('prod-img').value = '';
+        document.getElementById('prod-img-preview').style.display = 'none';
+      }
+      loadCatOptions();
+      document.getElementById('product-modal').classList.add('open');
+    }
+
+    document.getElementById('prod-img').addEventListener('input', function() {
+      const prev = document.getElementById('prod-img-preview');
+      if(this.value) { prev.src = this.value; prev.style.display='block'; } else { prev.style.display='none'; }
+    });
+
+    function closeProdModal() { document.getElementById('product-modal').classList.remove('open'); }
+
+    function loadCatOptions() {
+      const cats = getDB('fg_categories');
+      const sel = document.getElementById('prod-cat');
+      sel.innerHTML = cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    }
+
+    function saveProduct() {
+      const id = document.getElementById('prod-edit-id').value;
+      const products = getDB('fg_products');
+      const data = {
+        name: document.getElementById('prod-name').value,
+        description: document.getElementById('prod-desc').value,
+        price: parseFloat(document.getElementById('prod-price').value),
+        stock: parseInt(document.getElementById('prod-stock').value),
+        category: document.getElementById('prod-cat').value,
+        image: document.getElementById('prod-img').value
+      };
+      if (id) {
+        const i = products.findIndex(p => p.id === id);
+        if (i > -1) { products[i] = { ...products[i], ...data }; }
+      } else {
+        products.push({ id: generateId('PRD-'), ...data });
+      }
+      saveDB('fg_products', products);
+      closeProdModal(); loadProducts();
+      notify(id ? 'Product updated!' : 'Product added!', 'success');
+    }
+
+    function editProduct(id) { openProdModal(id); }
+    function deleteProduct(id) {
+      if (!confirm('Delete this product?')) return;
+      saveDB('fg_products', getDB('fg_products').filter(p => p.id !== id));
+      loadProducts(); notify('Product deleted', 'success');
+    }
+
+    function loadCategories() {
+      const cats = getDB('fg_categories'), products = getDB('fg_products');
+      document.getElementById('categories-body').innerHTML = cats.map(c => `<tr>
+        <td><span class="info-chip">${c.id}</span></td>
+        <td class="font-bold">${c.name}</td>
+        <td>${products.filter(p=>p.category===c.name).length} products</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteCategory('${c.id}')">🗑 Delete</button></td>
+      </tr>`).join('');
+    }
+
+    function addCategory() {
+      const name = document.getElementById('cat-name-inp').value.trim();
+      if (!name) { notify('Category name required', 'error'); return; }
+      const cats = getDB('fg_categories');
+      if (cats.find(c => c.name.toLowerCase() === name.toLowerCase())) { notify('Category already exists', 'warning'); return; }
+      cats.push({ id: generateId('CAT-'), name });
+      saveDB('fg_categories', cats);
+      document.getElementById('cat-modal').classList.remove('open');
+      document.getElementById('cat-name-inp').value = '';
+      loadCategories(); notify('Category added!', 'success');
+    }
+
+    function deleteCategory(id) {
+      if (!confirm('Delete this category?')) return;
+      saveDB('fg_categories', getDB('fg_categories').filter(c => c.id !== id));
+      loadCategories(); notify('Category deleted', 'success');
+    }
+
+    function loadAgents() {
+      document.getElementById('agents-body').innerHTML = getDB('fg_users').filter(u=>u.role==='agent').map(a => `<tr>
+        <td><span class="info-chip">${a.id}</span></td>
+        <td class="font-bold">${a.firstName} ${a.lastName}</td>
+        <td>${a.email||'-'}</td>
+        <td>${a.phone||'-'}</td>
+        <td>${a.location||'-'}</td>
+        <td class="text-primary">★ ${a.rating||'-'}</td>
+        <td><span class="badge ${a.availability ? 'badge-online' : 'badge-offline'}">${a.availability ? '🟢 Online' : '⚫ Offline'}</span></td>
+      </tr>`).join('');
+    }
+
+    function loadCsrs() {
+      document.getElementById('csrs-body').innerHTML = getDB('fg_users').filter(u=>u.role==='csr').map(c => `<tr>
+        <td><span class="info-chip">${c.id}</span></td>
+        <td class="font-bold">${c.firstName} ${c.lastName}</td>
+        <td>${c.email||'-'}</td>
+        <td>${c.phone||'-'}</td>
+        <td>${c.registrationDate||'-'}</td>
+      </tr>`).join('');
+    }
+
+    function addCsr() {
+      const users = getDB('fg_users');
+      const uname = document.getElementById('csr-uname').value.trim();
+      if (!uname) { notify('Username required', 'error'); return; }
+      if (users.find(u => u.username === uname)) { notify('Username already exists', 'error'); return; }
+      const newCsr = {
+        id: generateId('CSR-'),
+        firstName: document.getElementById('csr-fn').value,
+        lastName: document.getElementById('csr-ln').value,
+        email: document.getElementById('csr-email').value,
+        phone: document.getElementById('csr-phone').value,
+        username: uname,
+        password: document.getElementById('csr-pass').value || '123',
+        role: 'csr',
+        registrationDate: new Date().toISOString().split('T')[0]
+      };
+      users.push(newCsr);
+      saveDB('fg_users', users);
+      document.getElementById('csr-modal').classList.remove('open');
+      loadCsrs();
+      notify('CSR added successfully!', 'success');
+      setTimeout(() => notify(`[📧 Email to ${newCsr.email}] Welcome! Your login is ${newCsr.username}`, 'info'), 1500);
+    }
+
+    function loadCustomers() {
+      document.getElementById('customers-body').innerHTML = getDB('fg_users').filter(u=>u.role==='customer').map(c => `<tr>
+        <td><span class="info-chip">${c.id}</span></td>
+        <td class="font-bold">${c.firstName} ${c.lastName}</td>
+        <td>${c.email||'-'}</td>
+        <td>${c.phone||'-'}</td>
+        <td>${c.location||'-'}</td>
+        <td>${c.registrationDate||'-'}</td>
+      </tr>`).join('');
+    }
+
+    function loadOrders() {
+      document.getElementById('admin-orders-body').innerHTML = getDB('fg_orders').reverse().map(o => {
+        const a = o.agentId ? getDB('fg_users').find(u=>u.id===o.agentId) : null;
+        return `<tr>
+          <td><strong>${o.id}</strong></td>
+          <td>${o.customerInfo.name}<div class="text-muted" style="font-size:0.8rem;">${o.customerInfo.phone}</div></td>
+          <td>${a ? a.firstName+' '+a.lastName : '<span class="text-muted">-</span>'}</td>
+          <td>${new Date(o.date).toLocaleDateString()}</td>
+          <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+          <td class="text-primary font-bold">Rs.${o.total.toFixed(2)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function loadReports() {
+      const orders = getDB('fg_orders');
+      const total = orders.reduce((t,o)=>t+o.total,0);
+      const delivered = orders.filter(o=>o.status==='Delivered');
+      document.getElementById('report-revenue').innerHTML = `
+        <div class="flex justify-between mb-2"><span>Total Revenue</span><strong class="text-primary">Rs.${total.toFixed(2)}</strong></div>
+        <div class="flex justify-between mb-2"><span>Delivered Orders</span><strong>${delivered.length}</strong></div>
+        <div class="flex justify-between mb-2"><span>Avg Order Value</span><strong>Rs.${orders.length ? (total/orders.length).toFixed(2) : '0'}</strong></div>`;
+
+      const statuses = ['Pending','Assigned','OnTheWay','Delivered'];
+      document.getElementById('report-status').innerHTML = statuses.map(s => {
+        const c = orders.filter(o=>o.status===s).length;
+        const pct = orders.length ? ((c/orders.length)*100).toFixed(0) : 0;
+        return `<div class="mb-2"><div class="flex justify-between mb-1"><span>${s}</span><strong>${c}</strong></div><div style="background:var(--border-light);border-radius:99px;height:8px;"><div style="width:${pct}%;background:var(--primary);height:100%;border-radius:99px;"></div></div></div>`;
+      }).join('');
+
+      const agents = getDB('fg_users').filter(u=>u.role==='agent').sort((a,b)=>(b.rating||0)-(a.rating||0));
+      document.getElementById('report-agents').innerHTML = agents.map(a =>
+        `<div class="flex justify-between mb-2"><span>${a.firstName} ${a.lastName}</span><strong class="text-primary">★ ${a.rating||'N/A'}</strong></div>`
+      ).join('') || '<div class="text-muted">No agents yet.</div>';
+
+      const prods = getDB('fg_products').filter(p=>p.stock<10).sort((a,b)=>a.stock-b.stock);
+      document.getElementById('report-stock').innerHTML = prods.map(p =>
+        `<div class="flex justify-between mb-2"><span>${p.name}</span><strong class="text-danger">${p.stock} left</strong></div>`
+      ).join('') || '<div class="text-success">All products are well-stocked.</div>';
+    }
+
+    function copyAgentLink() {
+      const linkBox = document.getElementById('agent-link-box');
+      const linkInput = document.getElementById('agent-link-input');
+      const baseUrl = window.location.href.replace('admin-dashboard.html', 'agent-register.html');
+      linkInput.value = baseUrl;
+      linkBox.classList.remove('hidden');
+      notify('Agent registration link generated!', 'success');
+    }
+
+    function doCopyLink() {
+      const linkInput = document.getElementById('agent-link-input');
+      linkInput.select();
+      document.execCommand('copy');
+      notify('Link copied to clipboard! Send this to the new agent.', 'success');
+    }
+
+    loadOverview();
+  </script>
+</body>
+</html>
