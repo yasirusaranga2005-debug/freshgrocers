@@ -7,8 +7,8 @@ function initDB() {
   if (localStorage.getItem('fg_v3')) return;
 
   const users = [
-    { id: 'ADM-001', firstName: 'System', lastName: 'Admin', username: 'admin', password: '123', role: 'admin', email: 'admin@freshgrocers.com', phone: '0112345678', registrationDate: '2024-01-01' },
-    { id: 'CUST-001', firstName: 'John', lastName: 'Doe', username: 'john', password: '123', role: 'customer', email: 'john@example.com', phone: '0712345678', address: '23 Galle Road, Colombo 03', location: 'Colombo 03', registrationDate: '2024-06-15' },
+    { id: 'ADM-001', firstName: 'System', lastName: 'Admin', username: 'admin', password: '123456789', role: 'admin', email: 'admin@freshgrocers.com', phone: '0112345678', registrationDate: '2024-01-01' },
+    { id: 'CUST-001', firstName: 'John', lastName: 'Doe', username: 'john', password: '123456789', role: 'customer', email: 'john@example.com', phone: '0712345678', address: '23 Galle Road, Colombo 03', location: 'Colombo 03', registrationDate: '2024-06-15' },
     { id: 'AGT-001', firstName: 'Agent', lastName: 'Smith', username: 'agent1', password: '123', role: 'agent', email: 'smith@freshgrocers.com', phone: '0777777771', location: 'Colombo 03', availability: true, lat: 6.9022, lng: 79.8586, rating: 4.8, totalDeliveries: 120, registrationDate: '2024-02-10' },
     { id: 'AGT-002', firstName: 'Agent', lastName: 'Neo', username: 'agent2', password: '123', role: 'agent', email: 'neo@freshgrocers.com', phone: '0777777772', location: 'Colombo 05', availability: true, lat: 6.8847, lng: 79.8597, rating: 4.9, totalDeliveries: 85, registrationDate: '2024-03-20' },
     { id: 'CSR-001', firstName: 'Sarah', lastName: 'Silva', username: 'csr1', password: '123', role: 'csr', email: 'sarah@freshgrocers.com', phone: '0114567890', registrationDate: '2024-01-20' }
@@ -22,16 +22,97 @@ function initDB() {
   saveDB('fg_categories', categories);
 
   const products = [
-    { id: 'PRD-001', name: 'Fresh Organic Apples (1kg)', description: 'Hand-picked organic apples from highland farms of Sri Lanka. Rich in fiber and antioxidants. Perfect for a healthy snack or cooking.', price: 850, category: 'Fruits', stock: 50, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6faa6?auto=format&fit=crop&w=600&q=80' },
+    { id: 'PRD-001', name: 'Fresh Organic Apples (1kg)', description: 'Hand-picked organic apples from highland farms of Sri Lanka. Rich in fiber and antioxidants. Perfect for a healthy snack or cooking.', price: 850, category: 'Fruits', stock: 50, image: 'https://imgs.search.brave.com/xRelJ4tAlvWU1JWG0lHMN3Ylln96mmD2Otr4jV6GRjg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9vcmdh/bmljYW5kcmVhbC5j/b20vY2RuL3Nob3Av/cHJvZHVjdHMvb3Ix/MDAwMDAxMDFfMS5q/cGc_dj0xNjE2Mzc5/OTI1JndpZHRoPTEw/ODA' },
     { id: 'PRD-002', name: 'Farm Fresh Carrots (500g)', description: 'Sun-grown carrots packed with beta-carotene. Sourced daily from local farms. Great for soups, salads, and juicing.', price: 300, category: 'Vegetables', stock: 100, image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=600&q=80' },
     { id: 'PRD-003', name: 'Premium Dairy Milk (1L)', description: 'Fresh full-cream pasteurized milk from certified Sri Lankan dairy farms. Rich, creamy, and full of essential calcium and vitamins.', price: 450, category: 'Dairy', stock: 30, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80' },
     { id: 'PRD-004', name: 'Whole Wheat Artisan Bread', description: 'Freshly baked whole wheat bread made with stone-ground flour. No preservatives, baked fresh every morning by our master bakers.', price: 250, category: 'Bakery', stock: 20, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80' },
-    { id: 'PRD-005', name: 'Free Range Eggs (10 pack)', description: 'Farm-fresh eggs from free-range hens raised in open pastures. Superior taste and higher nutritional value compared to caged eggs.', price: 650, category: 'Dairy', stock: 40, image: 'https://images.unsplash.com/photo-1582722872425-47ef88f50813?auto=format&fit=crop&w=600&q=80' },
+    { id: 'PRD-005', name: 'Free Range Eggs (10 pack)', description: 'Farm-fresh eggs from free-range hens raised in open pastures. Superior taste and higher nutritional value compared to caged eggs.', price: 650, category: 'Dairy', stock: 40, image: 'https://cultiveat.co/wp-content/uploads/2021/08/CTV_E5_Kodawari-Eggs_00Cover-1400x1400.jpg' },
     { id: 'PRD-006', name: 'Fresh Chicken Breast (1kg)', description: 'Premium skinless chicken breast, hormone-free and antibiotic-free. Ideal for grilling, baking, or stir-frying for a healthy protein meal.', price: 1500, category: 'Meat', stock: 15, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=600&q=80' },
     { id: 'PRD-007', name: 'Ripe Bananas (6 pack)', description: 'Naturally ripened Sri Lankan bananas. High in potassium and natural energy. Great for breakfast or a quick snack on the go.', price: 200, category: 'Fruits', stock: 60, image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=600&q=80' },
     { id: 'PRD-008', name: 'Fresh Tomatoes (500g)', description: 'Juicy vine-ripened tomatoes freshly picked from our farm partners. Perfect for salads, curries, and sauces.', price: 350, category: 'Vegetables', stock: 80, image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=600&q=80' },
-    { id: 'PRD-009', name: 'Basmati Rice (1kg)', description: 'Premium long-grain basmati rice with a delicate aroma and fluffy texture. Ideal for biryanis, pilafs, and everyday meals.', price: 500, category: 'Bakery', stock: 200, image: 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=600&q=80' },
-    { id: 'PRD-010', name: 'Greek Yogurt (400g)', description: 'Thick and creamy Greek-style yogurt made from fresh whole milk. High in protein and probiotics. Available in plain variety.', price: 380, category: 'Dairy', stock: 25, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80' }
+    { id: 'PRD-009', name: 'Basmati Rice (1kg)', description: 'Premium long-grain basmati rice with a delicate aroma and fluffy texture. Ideal for biryanis, pilafs, and everyday meals.', price: 500, category: 'Bakery', stock: 200, image: 'https://tse3.mm.bing.net/th/id/OIP.Q29wR6x01oWbcqHLRS55BAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3' },
+    { id: 'PRD-010', name: 'Greek Yogurt (400g)', description: 'Thick and creamy Greek-style yogurt made from fresh whole milk. High in protein and probiotics. Available in plain variety.', price: 380, category: 'Dairy', stock: 25, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80' },
+    {
+      id: 'PRD-011',
+      name: 'Extra Virgin Olive Oil (500ml)',
+      description: 'Cold-pressed extra virgin olive oil. Rich in healthy fats and perfect for dressings, marinades, or light sautéing.',
+      price: 1800,
+      category: 'Pantry',
+      stock: 45,
+      image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-012',
+      name: 'Fresh Atlantic Salmon (500g)',
+      description: 'Premium cut of fresh Atlantic salmon. Rich in Omega-3 fatty acids and perfect for grilling or baking.',
+      price: 2200,
+      category: 'Seafood',
+      stock: 12,
+      image: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-013',
+      name: 'Organic Russet Potatoes (1kg)',
+      description: 'Versatile and earthy russet potatoes. Ideal for baking, mashing, or making homemade french fries.',
+      price: 450,
+      category: 'Vegetables',
+      stock: 150,
+      image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-014',
+      name: 'Red Onions (1kg)',
+      description: 'Crisp and flavorful red onions. A pantry staple essential for curries, salads, and everyday cooking.',
+      price: 380,
+      category: 'Vegetables',
+      stock: 120,
+      image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-015',
+      name: 'Ceylon Green Tea (100g)',
+      description: 'Pure Ceylon green tea leaves hand-plucked from high-altitude estates. Refreshing and packed with antioxidants.',
+      price: 650,
+      category: 'Beverages',
+      stock: 75,
+      image: 'https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-016',
+      name: 'Penne Pasta (500g)',
+      description: 'Authentic Italian-style penne pasta made from 100% durum wheat semolina. Holds sauces perfectly.',
+      price: 400,
+      category: 'Pantry',
+      stock: 90,
+      image: 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-018',
+      name: 'Hass Avocados (2 pieces)',
+      description: 'Creamy, ripe Hass avocados. Perfect for spreading on toast, adding to salads, or making fresh guacamole.',
+      price: 750,
+      category: 'Fruits',
+      stock: 35,
+      image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-019',
+      name: 'Aged Cheddar Cheese (200g)',
+      description: 'Sharp and tangy aged cheddar block. Excellent for sandwiches, cheese boards, or grating over warm dishes.',
+      price: 950,
+      category: 'Dairy',
+      stock: 28,
+      image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+      id: 'PRD-020',
+      name: 'Raw Almonds (250g)',
+      description: 'Premium quality raw, unsalted almonds. A crunchy, heart-healthy snack packed with vitamin E and protein.',
+      price: 1400,
+      category: 'Snacks',
+      stock: 65,
+      image: 'https://images.unsplash.com/photo-1508061253366-f7da158b6d46?auto=format&fit=crop&w=600&q=80'
+    }
   ];
   saveDB('fg_products', products);
   saveDB('fg_orders', []);
@@ -41,7 +122,7 @@ function initDB() {
   localStorage.setItem('fg_v3', 'true');
 }
 
-const getDB = (key) => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch(e) { return []; } };
+const getDB = (key) => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } };
 const saveDB = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
 initDB();

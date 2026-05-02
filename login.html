@@ -40,30 +40,17 @@
           <p class="text-muted">New customer? <a href="register.html" class="text-primary font-bold">Create an
               account</a></p>
         </div>
-
-        <hr class="divider">
-        <div
-          style="background:var(--bg-main);padding:1.25rem;border-radius:var(--radius-md);font-size:0.88rem;border:1px solid var(--border-light);">
-          <div class="font-bold mb-1">Demo Accounts</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;color:var(--text-muted);">
-            <span>🛍️ Customer: <strong>john</strong></span><span>Password: <strong>123</strong></span>
-            <span>🛵 Agent: <strong>agent1</strong></span><span>Password: <strong>123</strong></span>
-            <span>🎧 CSR: <strong>csr1</strong></span><span>Password: <strong>123</strong></span>
-            <span>⚙️ Admin: <strong>admin</strong></span><span>Password: <strong>123</strong></span>
-          </div>
-        </div>
       </div>
     </div>
-  </div>
 
-  <script src="app.js"></script>
-  <script>
-    const u = getCurrentUser(); if (u) redirectByRole(u.role);
-    document.getElementById('login-form').addEventListener('submit', e => {
-      e.preventDefault();
-      login(document.getElementById('username').value, document.getElementById('password').value);
-    });
-  </script>
+    <script src="app.js"></script>
+    <script>
+      const u = getCurrentUser(); if (u) redirectByRole(u.role);
+      document.getElementById('login-form').addEventListener('submit', e => {
+        e.preventDefault();
+        login(document.getElementById('username').value, document.getElementById('password').value);
+      });
+    </script>
 </body>
 
 </html>
